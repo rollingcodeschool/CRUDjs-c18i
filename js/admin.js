@@ -9,7 +9,7 @@ let campoCantidad = document.querySelector('#cantidad');
 let campoURL = document.querySelector('#url');
 let formularioProducto = document.querySelector('#formProducto');
 // lista de productos
-let listaProductos = [];
+let listaProductos = JSON.parse(localStorage.getItem('listaProductosKey')) || [];
 
 
 campoCodigo.addEventListener('blur', () => { campoRequerido(campoCodigo)});
@@ -39,6 +39,14 @@ function crearProducto(){
     console.log(listaProductos);
     // limpiar el formulario
     limpiarFormulario();
+    //guardar en localstorage el arreglo de productos
+    guardarLocalstorage();
+    // mostrar un mensaje al usuario
+    Swal.fire(
+        'Producto creado',
+        'Su producto fue correctamente creado',
+        'success'
+      )
 }
 
 function limpiarFormulario(){
@@ -48,4 +56,8 @@ function limpiarFormulario(){
     campoCodigo.className = 'form-control';
     campoProducto.className = 'form-control';
     // Tarea limpiar todos las clases
+}
+
+function guardarLocalstorage(){
+    localStorage.setItem('listaProductosKey', JSON.stringify(listaProductos));
 }
