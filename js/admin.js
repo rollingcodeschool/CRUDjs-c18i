@@ -10,7 +10,8 @@ let campoURL = document.querySelector('#url');
 let formularioProducto = document.querySelector('#formProducto');
 // lista de productos
 let listaProductos = JSON.parse(localStorage.getItem('listaProductosKey')) || [];
-
+let productoExistente = false; //si productoExistente=false quiero crear un nuevo producto, caso contrario quiero modificar
+let btnAgregar = document.querySelector('#btnAgregar');
 
 campoCodigo.addEventListener('blur', () => { campoRequerido(campoCodigo)});
 campoProducto.addEventListener('blur', ()=> { campoRequerido(campoProducto)});
@@ -18,6 +19,7 @@ campoDescripcion.addEventListener('blur', ()=>{ campoRequerido(campoDescripcion)
 campoCantidad.addEventListener('blur',()=>{ validarNumeros(campoCantidad)});
 campoURL.addEventListener('blur', ()=>{validarURL(campoURL)});
 formularioProducto.addEventListener('submit', guardarProducto);
+btnAgregar.addEventListener('click', limpiarFormulario)
 
 //llamar a la funcion cargaInicial
 cargaInicial();
@@ -26,8 +28,13 @@ function guardarProducto(e){
     e.preventDefault()
     // validar los campos del formulario
     if(validarGeneral(campoCodigo, campoProducto, campoDescripcion,campoCantidad, campoURL)){
-        // agregar o crear un producto
-        crearProducto();
+        if(productoExistente == false){
+            // caso 1: agregar o crear un producto
+            crearProducto();
+        }else{
+            // caso 2: el usuario quiere editar un producto
+            modificarProducto();
+        }      
     }
 }
 
@@ -61,6 +68,8 @@ function limpiarFormulario(){
     campoCodigo.className = 'form-control';
     campoProducto.className = 'form-control';
     // Tarea limpiar todos las clases
+    //limpiar la variable booleano
+    productoExistente=false;
 }
 
 function guardarLocalstorage(){
@@ -77,7 +86,7 @@ function crearFila(producto){
     <td>${producto.url}</td>
     <td>
       <button class="btn btn-warning" onclick="prepararEdicionProducto(${producto.codigo})">Editar</button
-      ><button class="btn btn-danger">Borrar</button>
+      ><button class="btn btn-danger" onclick="borrarProducto(${producto.codigo})">Borrar</button>
     </td>
   </tr>`;
 }
@@ -103,4 +112,56 @@ window.prepararEdicionProducto = function (codigo) {
     // mostrar los datos en el form
     campoCodigo.value = productoBuscado.codigo;
     campoProducto.value = productoBuscado.producto;
+    campoDescripcion.value = productoBuscado.descripcion;
+    campoCantidad.value = productoBuscado.cantidad;
+    campoURL.value = productoBuscado.url;
+    // aqui modifico la variable boolena
+    productoExistente=true;
+}
+
+function modificarProducto(){
+    console.log('aqui quiero modificar este producto')
+    //buscar la posicion de mi producto dentro del arreglo
+    let posicionProducto = listaProductos.findIndex((itemProducto)=>{return itemProducto.codigo == campoCodigo.value});
+    console.log(posicionProducto);
+    //modificar los datos de ese producto dentro del arreglo
+    listaProductos[posicionProducto].descripcion= campoDescripcion.value;
+    listaProductos[posicionProducto].producto = campoProducto.value;
+    listaProductos[posicionProducto].cantidad = campoCantidad.value;
+    listaProductos[posicionProducto].url = campoURL.value;
+    console.log(listaProductos);
+    //actualizar los datos del localstorage
+    guardarLocalstorage();
+    //mostrar un cartel al usuario
+    Swal.fire(
+        'Producto modificado',
+        'Su producto fue correctamente editado',
+        'success'
+      )
+    //limpiar los datos del formulario
+    limpiarFormulario()
+    //actualizar la tabla
+    borrarTabla();
+    // dibujar fila
+    listaProductos.forEach((itemProducto)=>{crearFila(itemProducto)});
+}
+
+window.borrarProducto = function (codigo){
+    console.log(codigo);
+    // borro el producto del arreglo
+    let arregloProductoBorrado = listaProductos.filter((itemProducto)=>{return itemProducto.codigo != codigo})
+    console.log(arregloProductoBorrado);
+    //actualizar los datos en localstorage
+    listaProductos = arregloProductoBorrado;
+    guardarLocalstorage();
+    //actualizar los datos de la tabla
+    borrarTabla();
+    // dibujar fila
+    listaProductos.forEach((itemProducto)=>{crearFila(itemProducto)});
+    //mostrar mensaje
+    Swal.fire(
+        'Producto Eliminado',
+        'Su producto fue correctamente eliminado del sistema',
+        'success'
+      )
 }
